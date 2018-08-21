@@ -1,17 +1,11 @@
 import React, { Component } from 'react';
-import { Map, InfoWindow, Marker, GoogleApiWrapper } from 'google-maps-react';
-
-// const googleMapURL = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCYmGp0uOW185yXkNFzPLeE8a_n4ri_RKg&callback=initMap';
+import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
 
 const Listing = ({ places }) => (
-    <ul>{places && places.map(p => <li key={p.id}>{p.name}</li>)}</ul>
+    places && places.map(p => <Marker key={p.id} name={p.name} position={{ lat: p.geometry.location.lat(), lng: p.geometry.location.lng() }}/>)
 );
 
-const pyrmont = {lat: -33.867, lng: 151.195};
-
 class MapContainer extends Component {
-
-
 
     state = {
         activeMarker: {},
@@ -23,48 +17,34 @@ class MapContainer extends Component {
         places: []
     };
 
+    onMapReady = (mapProps, map) => this.searchNearby(map, map.center);
 
-    onMarkerClick = (props, marker) =>
-        this.setState({
-            activeMarker: marker,
-            selectedPlace: props,
-            showingInfoWindow: true
-        });
+    searchNearby = (map, center) => {
+        const { google } = this.props;
 
-    onInfoWindowClose = () =>
-        this.setState({
-            activeMarker: null,
-            showingInfoWindow: false
-        });
-
-    componentDidMount() {
-
-        fetch('https://api.myjson.com/bins/hsh1e')
-            .then((response) => response.json())
-            .then((findresponse) => {
-                console.log(findresponse);
-                this.setState({
-                    name: findresponse.name,
-                    lat: findresponse.lat,
-                    lng: findresponse.lng
-                });
-            });
-    }
-
-
-    fetchPlaces(mapProps, map) {
-        const {google} = mapProps;
         const service = new google.maps.places.PlacesService(map);
-        console.log(service);
-    }
+
+        // Specify location, radius and place types for your Places API search.
+        const request = {
+            location: center,
+            radius: '500',
+            type: ['food']
+        };
+
+        service.nearbySearch(request, (results, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK)
+                this.setState({ places: results });
+                console.log();
+        });
+    };
 
     render() {
         return(
             <Map
+                className="map"
                 google={this.props.google}
-                zoom={14}
+                onReady={this.onMapReady}
                 initialCenter={this.centerAroundCurrentLocation}
-                onReady={this.fetchPlaces}
             >
                 <Listing places={this.state.places} />
             </Map>
@@ -73,5 +53,5 @@ class MapContainer extends Component {
 }
 
 export default GoogleApiWrapper({
-    apiKey: ('AIzaSyCYmGp0uOW185yXkNFzPLeE8a_n4ri_RKg')
+    apiKey: ('AIzaSyD_PmkYQ4Dl6uLsm0t1Z-zi8FzckLYscJs')
 })(MapContainer)
