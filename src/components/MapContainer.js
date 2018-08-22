@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
 
-const Listing = ({ places }) => (
-    places && places.map(p => <Marker key={p.id} name={p.name} position={{ lat: p.geometry.location.lat(), lng: p.geometry.location.lng() }}/>)
-);
+const Listing = ({ places }) => {
+
+    let out = places && places.map(p => <Marker key={p.id} name={p.name} position={{ lat: p.geometry.location.lat(), lng: p.geometry.location.lng() }}/>)
+    return out
+};
 
 class MapContainer extends Component {
 
@@ -20,33 +22,48 @@ class MapContainer extends Component {
     onMapReady = (mapProps, map) => this.searchNearby(map, map.center);
 
     searchNearby = (map, center) => {
+
         const { google } = this.props;
 
-        const service = new google.maps.places.PlacesService(map);
+        navigator.geolocation.getCurrentPosition((position) => {
+            let initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            map.setCenter(initialLocation);
 
-        // Specify location, radius and place types for your Places API search.
-        const request = {
-            location: center,
-            radius: '500',
-            type: ['food']
-        };
+            const service = new google.maps.places.PlacesService(map);
 
-        service.nearbySearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK)
-                this.setState({ places: results });
-                console.log();
+            // Specify location, radius and place types for your Places API search.
+            const request = {
+                location: initialLocation,
+                radius: '500',
+                type: ['food']
+            };
+
+            service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK)
+                    this.setState({ places: results });
+            });
+
         });
+
+
     };
 
+    onMarkerClicked(place) {
+        // this.setState(cuure)
+    }
+
     render() {
+        console.log("rendering with", this.state.places)
         return(
             <Map
                 className="map"
                 google={this.props.google}
                 onReady={this.onMapReady}
-                initialCenter={this.centerAroundCurrentLocation}
             >
-                <Listing places={this.state.places} />
+                {this.state.places.map(((place) => {
+                    console.log("place", place)
+                    return <Marker key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
+                }))}
             </Map>
         );
     }
