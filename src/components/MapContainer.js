@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
+import {Map, GoogleApiWrapper, Marker, InfoWindow} from 'google-maps-react';
 
 const Listing = ({ places }) => {
 
@@ -17,6 +17,27 @@ class MapContainer extends Component {
         lat: '',
         lng: '',
         places: []
+    };
+
+    onMarkerClick = (props, place) =>
+        this.setState({
+            activeMarker: place,
+            selectedPlace: place,
+            showingInfoWindow: true
+        });
+
+    onInfoWindowClose = () =>
+        this.setState({
+            activeMarker: null,
+            showingInfoWindow: false
+        });
+
+    onMapClicked = () => {
+        if (this.state.showingInfoWindow)
+            this.setState({
+                activeMarker: null,
+                showingInfoWindow: false
+            });
     };
 
     onMapReady = (mapProps, map) => this.searchNearby(map, map.center);
@@ -38,6 +59,8 @@ class MapContainer extends Component {
                 type: ['food']
             };
 
+            console.log("initialLocation: ", initialLocation);
+
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
                     this.setState({ places: results });
@@ -53,17 +76,29 @@ class MapContainer extends Component {
     }
 
     render() {
-        console.log("rendering with", this.state.places)
+
         return(
             <Map
                 className="map"
                 google={this.props.google}
+                onClick={this.onMapClicked}
                 onReady={this.onMapReady}
             >
                 {this.state.places.map(((place) => {
-                    console.log("place", place)
-                    return <Marker key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
+                    console.log("place", place);
+                    return <Marker onClick={this.onMarkerClick} name={place.name} key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
                 }))}
+
+                <InfoWindow
+                    marker={this.state.activeMarker}
+                    onClose={this.onInfoWindowClose}
+                    visible={this.state.showingInfoWindow}>
+                    <div>
+                        <img src="https://maps.googleapis.com/maps/api/streetview?size=400x400&location="{this.state.selectedPlace.geometry.location.lat()}","{this.state.selectedPlace.geometry.location.lng()}"&fov=90&heading=235&pitch=10&key=AIzaSyD_PmkYQ4Dl6uLsm0t1Z-zi8FzckLYscJs" />
+                        <p>{this.state.selectedPlace.name}</p>
+                        {console.log("Selected place: ", this.state.selectedPlace)}
+                    </div>
+                </InfoWindow>
             </Map>
         );
     }

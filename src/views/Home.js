@@ -13,7 +13,9 @@ class Home extends Component {
                                 centerAroundCurrentLocation={true}
                             />
                         </div>
-                        <div className="col-3" id="sidebar"></div>
+                        <div className="col-3" id="sidebar">
+
+                        </div>
                     </div>
                 </div>
 
