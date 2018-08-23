@@ -1,18 +1,13 @@
 import React, { Component } from 'react';
 import {Map, GoogleApiWrapper, Marker, InfoWindow} from 'google-maps-react';
 
-const Listing = ({ places }) => {
-
-    let out = places && places.map(p => <Marker key={p.id} name={p.name} position={{ lat: p.geometry.location.lat(), lng: p.geometry.location.lng() }}/>)
-    return out
-};
-
 class MapContainer extends Component {
 
     state = {
         activeMarker: {},
         selectedPlace: {},
         showingInfoWindow: false,
+        initialLocation: {},
         name: '',
         lat: '',
         lng: '',
@@ -50,6 +45,8 @@ class MapContainer extends Component {
             let initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             map.setCenter(initialLocation);
 
+            this.setState({initialLocation: initialLocation})
+
             const service = new google.maps.places.PlacesService(map);
 
             // Specify location, radius and place types for your Places API search.
@@ -58,8 +55,6 @@ class MapContainer extends Component {
                 radius: '500',
                 type: ['food']
             };
-
-            console.log("initialLocation: ", initialLocation);
 
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
@@ -71,11 +66,13 @@ class MapContainer extends Component {
 
     };
 
-    onMarkerClicked(place) {
-        // this.setState(cuure)
-    }
 
     render() {
+
+        const icon = {
+            url: "https://image.flaticon.com/icons/svg/149/149060.svg",
+            scaledSize: new this.props.google.maps.Size(90, 42),
+        };
 
         return(
             <Map
@@ -84,8 +81,12 @@ class MapContainer extends Component {
                 onClick={this.onMapClicked}
                 onReady={this.onMapReady}
             >
+                <Marker
+                    icon={icon}
+                    position={this.state.initialLocation}
+                />
+
                 {this.state.places.map(((place) => {
-                    console.log("place", place);
                     return <Marker onClick={this.onMarkerClick} name={place.name} key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
                 }))}
 
@@ -93,11 +94,16 @@ class MapContainer extends Component {
                     marker={this.state.activeMarker}
                     onClose={this.onInfoWindowClose}
                     visible={this.state.showingInfoWindow}>
-                    <div>
-                        <img src="https://maps.googleapis.com/maps/api/streetview?size=400x400&location="{this.state.selectedPlace.geometry.location.lat()}","{this.state.selectedPlace.geometry.location.lng()}"&fov=90&heading=235&pitch=10&key=AIzaSyD_PmkYQ4Dl6uLsm0t1Z-zi8FzckLYscJs" />
-                        <p>{this.state.selectedPlace.name}</p>
-                        {console.log("Selected place: ", this.state.selectedPlace)}
-                    </div>
+                    {
+                        !this.state.selectedPlace.position
+                            ?
+                            <p>Loading data...</p>
+                            :
+                            <div>
+                                <p style={{width: 200}}>{this.state.selectedPlace.name}</p>
+                                <img src={"https://maps.googleapis.com/maps/api/streetview?size=200x200&location=" + this.state.selectedPlace.position.lat() + "," + this.state.selectedPlace.position.lng() + "&fov=90&heading=235&pitch=10&key=AIzaSyAlA2_i0e46q-1FlJckttOZvuqwZkrXKHk"} alt="Street View Pic"/>
+                            </div>
+                    }
                 </InfoWindow>
             </Map>
         );
@@ -105,5 +111,5 @@ class MapContainer extends Component {
 }
 
 export default GoogleApiWrapper({
-    apiKey: ('AIzaSyD_PmkYQ4Dl6uLsm0t1Z-zi8FzckLYscJs')
+    apiKey: ('AIzaSyAlA2_i0e46q-1FlJckttOZvuqwZkrXKHk')
 })(MapContainer)

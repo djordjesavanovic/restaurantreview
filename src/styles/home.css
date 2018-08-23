@@ -20,4 +20,5 @@ html, body {
     right: 0;
     bottom: 0;
     overflow: scroll;
+    padding-top: 15px;
 }
