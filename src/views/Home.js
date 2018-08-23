@@ -6,21 +6,24 @@ class Home extends Component {
 
     state = {
         activeMarker: {},
-        selectedPlace: {},
+        selectedPlace: [],
         showingInfoWindow: false,
         initialLocation: {},
         name: '',
         lat: '',
         lng: '',
-        places: []
+        places: [],
+        placesNew: []
     };
 
-    onMarkerClick = (props, place) =>
+    onMarkerClick = (props, marker) => {
         this.setState({
-            activeMarker: place,
-            selectedPlace: place,
+            activeMarker: marker,
+            selectedPlace: marker,
             showingInfoWindow: true
         });
+    }
+
 
     onInfoWindowClose = () =>
         this.setState({
@@ -46,7 +49,7 @@ class Home extends Component {
             let initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             map.setCenter(initialLocation);
 
-            this.setState({initialLocation: initialLocation})
+            this.setState({initialLocation: initialLocation});
 
             const service = new google.maps.places.PlacesService(map);
 
@@ -54,17 +57,15 @@ class Home extends Component {
             const request = {
                 location: initialLocation,
                 radius: '500',
-                type: ['food']
+                type: ['restaurant'],
             };
 
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
                     this.setState({ places: results });
-                console.log(this.state.places);
             });
 
         });
-
 
     };
 
@@ -77,7 +78,7 @@ class Home extends Component {
 
         return (
             <main role="main">
-
+                {console.log(this.state.selectedPlace)};
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-9" id="map">
@@ -93,7 +94,7 @@ class Home extends Component {
                                 />
 
                                 {this.state.places.map(((place) => {
-                                    return <Marker onClick={this.onMarkerClick} name={place.name} key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
+                                    return <Marker onClick={this.onMarkerClick} name={place.name} id={place.id} key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
                                 }))}
 
                                 <InfoWindow
@@ -118,7 +119,8 @@ class Home extends Component {
                                 return (
                                     <Card key={place.id}>
                                         <CardHeader>{place.name}</CardHeader>
-                                        <CardBody>{!place.rating ? "Rating not available" : place.rating}</CardBody>
+                                        <CardBody>{place.vicinity}</CardBody>
+                                        <CardFooter>Rating: {!place.rating ? "Rating not available" : place.rating}</CardFooter>
                                     </Card>
                                 )
                             }))}
