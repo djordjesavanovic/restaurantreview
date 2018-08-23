@@ -13,7 +13,7 @@ class Home extends Component {
         lat: '',
         lng: '',
         places: [],
-        placesNew: []
+        selectedRestaurant: ''
     };
 
     onMarkerClick = (props, marker) => {
@@ -22,8 +22,7 @@ class Home extends Component {
             selectedPlace: marker,
             showingInfoWindow: true
         });
-    }
-
+    };
 
     onInfoWindowClose = () =>
         this.setState({
@@ -37,6 +36,12 @@ class Home extends Component {
                 activeMarker: null,
                 showingInfoWindow: false
             });
+    };
+
+    onRestaurantClick(e) {
+        this.setState({
+            selectedRestaurant: e.currentTarget.dataset.id
+        });
     };
 
     onMapReady = (mapProps, map) => this.searchNearby(map, map.center);
@@ -69,7 +74,7 @@ class Home extends Component {
 
     };
 
-    render () {
+    render() {
 
         const icon = {
             url: "https://image.flaticon.com/icons/svg/149/149060.svg",
@@ -78,7 +83,6 @@ class Home extends Component {
 
         return (
             <main role="main">
-                {console.log(this.state.selectedPlace)};
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-9" id="map">
@@ -87,6 +91,7 @@ class Home extends Component {
                                 google={this.props.google}
                                 onClick={this.onMapClicked}
                                 onReady={this.onMapReady}
+                                zoom={17}
                             >
                                 <Marker
                                     icon={icon}
@@ -115,12 +120,12 @@ class Home extends Component {
                             </Map>
                         </div>
                         <div className="col-3" id="sidebar">
-                            {this.state.places.map(((place) => {
+                            {this.state.places.map(((restaurant) => {
                                 return (
-                                    <Card key={place.id}>
-                                        <CardHeader>{place.name}</CardHeader>
-                                        <CardBody>{place.vicinity}</CardBody>
-                                        <CardFooter>Rating: {!place.rating ? "Rating not available" : place.rating}</CardFooter>
+                                    <Card key={restaurant.id}>
+                                        <CardHeader><strong data-id={restaurant.id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong></CardHeader>
+                                        <CardBody>{restaurant.vicinity}</CardBody>
+                                        <CardFooter>Rating: {!restaurant.rating ? "Rating not available" : restaurant.rating}</CardFooter>
                                     </Card>
                                 )
                             }))}
