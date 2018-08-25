@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Map, GoogleApiWrapper, Marker, InfoWindow} from 'google-maps-react';
 import { Card, CardHeader, CardBody, CardFooter } from "react-simple-card";
+import ReactStars from "react-stars";
 
 class Home extends Component {
 
@@ -13,8 +14,14 @@ class Home extends Component {
         lat: '',
         lng: '',
         places: [],
-        selectedRestaurant: ''
+        selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
+        map: {},
+        reviews: {}
     };
+
+    ratingChanged = (newRating) => {
+        console.log(newRating)
+    }
 
     onMarkerClick = (props, marker) => {
         this.setState({
@@ -42,11 +49,30 @@ class Home extends Component {
         this.setState({
             selectedRestaurant: e.currentTarget.dataset.id
         });
+
+        const { google } = this.props;
+
+        let map = this.state.map;
+
+        let service = new google.maps.places.PlacesService(map);
+
+        service.getDetails({
+            placeId: this.state.selectedRestaurant
+        }, function(place, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                console.log(place.reviews)
+            }
+        });
     };
 
-    onMapReady = (mapProps, map) => this.searchNearby(map, map.center);
+    onMapReady = (mapProps, map) => {
+        this.searchNearby(map);
+        this.setState({
+            map: map
+        });
+    };
 
-    searchNearby = (map, center) => {
+    searchNearby = (map) => {
 
         const { google } = this.props;
 
@@ -68,6 +94,7 @@ class Home extends Component {
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
                     this.setState({ places: results });
+                    console.log(results);
             });
 
         });
@@ -122,10 +149,26 @@ class Home extends Component {
                         <div className="col-3" id="sidebar">
                             {this.state.places.map(((restaurant) => {
                                 return (
-                                    <Card key={restaurant.id}>
-                                        <CardHeader><strong data-id={restaurant.id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong></CardHeader>
-                                        <CardBody>{restaurant.vicinity}</CardBody>
-                                        <CardFooter>Rating: {!restaurant.rating ? "Rating not available" : restaurant.rating}</CardFooter>
+                                    <Card key={restaurant.place_id}>
+                                        <CardHeader>
+                                            <div>
+                                                <strong data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
+                                            </div>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <ReactStars
+                                                count={5}
+                                                value={!restaurant.rating ? 0 : restaurant.rating}
+                                                onChange={this.ratingChanged}
+                                                size={18}
+                                                color2={'#ffd700'}
+                                            />
+                                        </CardBody>
+                                        <CardFooter>
+                                            <div>
+                                                <small>{restaurant.vicinity}</small>
+                                            </div>
+                                        </CardFooter>
                                     </Card>
                                 )
                             }))}

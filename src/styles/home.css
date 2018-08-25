@@ -22,3 +22,15 @@ html, body {
     overflow: scroll;
     padding-top: 15px;
 }
+
+.card__header {
+    padding: 5px 10px !important;
+}
+
+.card__body {
+    padding: 5px 10px !important;
+}
+
+.card__footer {
+    padding: 5px 10px !important;
+}
