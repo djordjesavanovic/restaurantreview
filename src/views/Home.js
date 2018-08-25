@@ -16,7 +16,8 @@ class Home extends Component {
         places: [],
         selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
         map: {},
-        reviews: {}
+        reviews: []
+
     };
 
     ratingChanged = (newRating) => {
@@ -56,20 +57,21 @@ class Home extends Component {
 
         let service = new google.maps.places.PlacesService(map);
 
-        service.getDetails({
+        const request = {
             placeId: this.state.selectedRestaurant
-        }, function(place, status) {
+        };
+
+        service.getDetails(request, (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
-                console.log(place.reviews)
+                this.setState({reviews: place.reviews});
+                console.log(this.state.reviews);
             }
         });
     };
 
     onMapReady = (mapProps, map) => {
         this.searchNearby(map);
-        this.setState({
-            map: map
-        });
+        this.setState({map: map});
     };
 
     searchNearby = (map) => {
@@ -163,6 +165,18 @@ class Home extends Component {
                                                 size={18}
                                                 color2={'#ffd700'}
                                             />
+                                            {
+                                                !this.state.reviews ? <div/> :
+                                                    this.state.reviews.map(((review, i) => {
+                                                        return (
+                                                            <div key={i}>
+                                                                <p>{review.author_name}</p>
+                                                                <p>{review.text}</p>
+                                                                <p>{review.rating}</p>
+                                                            </div>
+                                                        )
+                                                    }))
+                                            }
                                         </CardBody>
                                         <CardFooter>
                                             <div>
