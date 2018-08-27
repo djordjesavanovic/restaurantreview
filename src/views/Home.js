@@ -64,7 +64,7 @@ class Home extends Component {
         service.getDetails(request, (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
                 this.setState({reviews: place.reviews});
-                console.log(this.state.reviews);
+                console.log("Place, onRestClick: ", place);
             }
         });
     };
@@ -114,7 +114,7 @@ class Home extends Component {
             <main role="main">
                 <div className="container-fluid">
                     <div className="row">
-                        <div className="col-9" id="map">
+                        <div className="col-8" id="map">
                             <Map
                                 className="map"
                                 google={this.props.google}
@@ -148,10 +148,11 @@ class Home extends Component {
                                 </InfoWindow>
                             </Map>
                         </div>
-                        <div className="col-3" id="sidebar">
-                            {this.state.places.map(((restaurant) => {
+                        <div className="col-4" id="sidebar">
+                            {this.state.places.map(((restaurant, i) => {
                                 return (
-                                    <Card key={restaurant.place_id}>
+                                    <Card key={i}>
+                                        {console.log(i)}
                                         <CardHeader>
                                             <div>
                                                 <strong data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
