@@ -42,11 +42,14 @@ class Home extends Component {
             reviews: [],
             modalOpen: false,
             minRating: '',
-            maxRating: ''
+            maxRating: '',
+            addPlaceModal: false,
+            placeName: ''
         };
 
         this.filterPlaces = this.filterPlaces.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.onSaveRestaurant = this.onSaveRestaurant.bind(this);
     }
 
     handleChange(event) {
@@ -79,6 +82,7 @@ class Home extends Component {
         });
 
     onMapClicked = () => {
+
         if (this.state.showingInfoWindow)
             this.setState({
                 activeMarker: null,
@@ -86,8 +90,48 @@ class Home extends Component {
             });
     };
 
+    getClickLocation() {
+
+        const { google } = this.props;
+
+        let map = this.state.map;
+
+        this.setState({
+            addPlaceModal: true
+        });
+
+        map.addListener('click', function(e) {
+            placeMarker(e.latLng, map);
+        });
+
+        let infowindow = new google.maps.InfoWindow({
+            content: this.state.placeName
+        });
+
+        const placeMarker = (position, map) => {
+            let marker = new google.maps.Marker({
+                position: position,
+                map: map
+            });
+
+            marker.addListener('click', function() {
+                infowindow.open(map, marker);
+            });
+        }
+    }
+
+    onSaveRestaurant() {
+        this.setState({
+            placeName: this.state.placeName,
+            addPlaceModal: false
+        })
+    }
+
     onCloseModal = () => {
-        this.setState({ modalOpen: false });
+        this.setState({
+            modalOpen: false,
+            addPlaceModal: false
+        });
     };
 
     onRestaurantClick(e) {
@@ -178,7 +222,7 @@ class Home extends Component {
                             <Map
                                 className="map"
                                 google={this.props.google}
-                                onClick={this.onMapClicked}
+                                onClick={() => {this.onMapClicked(); this.getClickLocation()}}
                                 onReady={this.onMapReady}
                                 zoom={16}
                             >
@@ -211,8 +255,8 @@ class Home extends Component {
                         <div className="col-4" id="sidebar">
                             <div className="mb-3">
                                 <div className="input-group">
-                                    <input type="number" className="form-control" name="minRating" value={this.state.minRating} onChange={this.handleChange} />
-                                    <input type="number" className="form-control" name="maxRating" value={this.state.maxRating} onChange={this.handleChange} />
+                                    <input type="number" placeholder="Min. Stars" className="form-control" name="minRating" value={this.state.minRating} onChange={this.handleChange} />
+                                    <input type="number" placeholder="Max. Stars" className="form-control" name="maxRating" value={this.state.maxRating} onChange={this.handleChange} />
                                 </div>
                                 <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
                             </div>
@@ -221,7 +265,7 @@ class Home extends Component {
                                     <Card key={i}>
                                         <CardHeader>
                                             <div>
-                                                <strong data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
+                                                <strong className="restaurantName" data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
                                             </div>
                                         </CardHeader>
                                         <CardBody>
@@ -247,6 +291,26 @@ class Home extends Component {
                 <Modal open={this.state.modalOpen} onClose={this.onCloseModal} center>
                     <h3>Reviews:</h3>
                     <Reviews reviews={this.state.reviews} />
+                </Modal>
+
+                <Modal open={this.state.addPlaceModal} onClose={this.onCloseModal} center>
+                    <h3>Add a new place</h3>
+
+                    <div className="row">
+                        <div className="col-12">
+                            <strong>Place name:</strong>
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-12">
+                            <input type="text" placeholder="e.g. Robby's Diner" className="form-control" name="placeName" value={this.state.placeName} onChange={this.handleChange} />
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-12">
+                            <button type="button" onClick={this.onSaveRestaurant} className="btn btn-primary btn-block form-control">Add place</button>
+                        </div>
+                    </div>
                 </Modal>
             </main>
         );

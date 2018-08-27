@@ -3,3 +3,12 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+.restaurantName {
+  cursor: pointer;
+}
+
+.restaurantName:hover {
+  cursor: pointer;
+  color: #007bff;
+}
