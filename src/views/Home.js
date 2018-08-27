@@ -2,27 +2,67 @@ import React, {Component} from 'react';
 import {Map, GoogleApiWrapper, Marker, InfoWindow} from 'google-maps-react';
 import { Card, CardHeader, CardBody, CardFooter } from "react-simple-card";
 import ReactStars from "react-stars";
+import Modal from 'react-responsive-modal';
+
+const Reviews = ({ reviews }) => (
+    <div>{reviews && reviews.map((review, i) =>
+        <div key={i}>
+            <div className="row">
+                <div className="col-12">
+                    <hr />
+                    <small><strong>{review.author_name} | Rating: {review.rating}</strong></small>
+                </div>
+            </div>
+            <div className="row">
+                <div className="col-12">
+                    <small>{review.text}</small>
+                    <hr />
+                </div>
+            </div>
+        </div>
+    )}</div>
+);
 
 class Home extends Component {
 
-    state = {
-        activeMarker: {},
-        selectedPlace: [],
-        showingInfoWindow: false,
-        initialLocation: {},
-        name: '',
-        lat: '',
-        lng: '',
-        places: [],
-        selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
-        map: {},
-        reviews: []
+    constructor(props) {
+        super(props);
 
-    };
+        this.state = {
+            activeMarker: {},
+            selectedPlace: [],
+            showingInfoWindow: false,
+            initialLocation: {},
+            name: '',
+            lat: '',
+            lng: '',
+            places: [],
+            selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
+            map: {},
+            reviews: [],
+            modalOpen: false,
+            minRating: '',
+            maxRating: ''
+        };
+
+        this.filterPlaces = this.filterPlaces.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(event) {
+        const target = event.target;
+        const value = target.value;
+        const name = target.name;
+
+        this.setState({
+            [name]: value
+        });
+    }
 
     ratingChanged = (newRating) => {
         console.log(newRating)
-    }
+    };
+
 
     onMarkerClick = (props, marker) => {
         this.setState({
@@ -46,6 +86,10 @@ class Home extends Component {
             });
     };
 
+    onCloseModal = () => {
+        this.setState({ modalOpen: false });
+    };
+
     onRestaurantClick(e) {
         this.setState({
             selectedRestaurant: e.currentTarget.dataset.id
@@ -64,8 +108,12 @@ class Home extends Component {
         service.getDetails(request, (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
                 this.setState({reviews: place.reviews});
-                console.log("Place, onRestClick: ", place);
             }
+        });
+
+        this.setState({
+            modalOpen: true,
+            reviews: null
         });
     };
 
@@ -96,12 +144,24 @@ class Home extends Component {
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
                     this.setState({ places: results });
-                    console.log(results);
             });
 
         });
 
     };
+
+    filterPlaces() {
+
+        const restaurants = this.state.places;
+
+        const filteredRestaurant = restaurants.filter(restaurant => {
+            return (
+                restaurant.rating > this.state.minRating && restaurant.rating < this.state.maxRating
+            );
+        });
+
+        this.setState({ places: filteredRestaurant });
+    }
 
     render() {
 
@@ -120,7 +180,7 @@ class Home extends Component {
                                 google={this.props.google}
                                 onClick={this.onMapClicked}
                                 onReady={this.onMapReady}
-                                zoom={17}
+                                zoom={16}
                             >
                                 <Marker
                                     icon={icon}
@@ -149,10 +209,16 @@ class Home extends Component {
                             </Map>
                         </div>
                         <div className="col-4" id="sidebar">
+                            <div className="mb-3">
+                                <div className="input-group">
+                                    <input type="number" className="form-control" name="minRating" value={this.state.minRating} onChange={this.handleChange} />
+                                    <input type="number" className="form-control" name="maxRating" value={this.state.maxRating} onChange={this.handleChange} />
+                                </div>
+                                <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
+                            </div>
                             {this.state.places.map(((restaurant, i) => {
                                 return (
                                     <Card key={i}>
-                                        {console.log(i)}
                                         <CardHeader>
                                             <div>
                                                 <strong data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
@@ -166,18 +232,6 @@ class Home extends Component {
                                                 size={18}
                                                 color2={'#ffd700'}
                                             />
-                                            {
-                                                !this.state.reviews ? <div/> :
-                                                    this.state.reviews.map(((review, i) => {
-                                                        return (
-                                                            <div key={i}>
-                                                                <p>{review.author_name}</p>
-                                                                <p>{review.text}</p>
-                                                                <p>{review.rating}</p>
-                                                            </div>
-                                                        )
-                                                    }))
-                                            }
                                         </CardBody>
                                         <CardFooter>
                                             <div>
@@ -190,7 +244,10 @@ class Home extends Component {
                         </div>
                     </div>
                 </div>
-
+                <Modal open={this.state.modalOpen} onClose={this.onCloseModal} center>
+                    <h3>Reviews:</h3>
+                    <Reviews reviews={this.state.reviews} />
+                </Modal>
             </main>
         );
     }
