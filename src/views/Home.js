@@ -37,6 +37,7 @@ class Home extends Component {
             lat: '',
             lng: '',
             places: [],
+            unfilteredPlaces: [],
             selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
             map: {},
             reviews: [],
@@ -50,6 +51,7 @@ class Home extends Component {
         this.filterPlaces = this.filterPlaces.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.onSaveRestaurant = this.onSaveRestaurant.bind(this);
+        this.clearFilter = this.clearFilter.bind(this);
     }
 
     handleChange(event) {
@@ -187,7 +189,10 @@ class Home extends Component {
 
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
-                    this.setState({ places: results });
+                    this.setState({
+                        places: results,
+                        unfilteredPlaces: results
+                    });
             });
 
         });
@@ -205,6 +210,10 @@ class Home extends Component {
         });
 
         this.setState({ places: filteredRestaurant });
+    }
+
+    clearFilter() {
+        this.setState({ places: this.state.unfilteredPlaces });
     }
 
     render() {
@@ -258,7 +267,14 @@ class Home extends Component {
                                     <input type="number" placeholder="Min. Stars" className="form-control" name="minRating" value={this.state.minRating} onChange={this.handleChange} />
                                     <input type="number" placeholder="Max. Stars" className="form-control" name="maxRating" value={this.state.maxRating} onChange={this.handleChange} />
                                 </div>
-                                <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
+                                <div className="row mt-2">
+                                    <div className="col-6">
+                                        <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
+                                    </div>
+                                    <div className="col-6">
+                                        <button type="button" onClick={this.clearFilter} className="btn btn-primary btn-block form-control">Clear</button>
+                                    </div>
+                                </div>
                             </div>
                             {this.state.places.map(((restaurant, i) => {
                                 return (
