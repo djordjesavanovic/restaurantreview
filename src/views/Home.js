@@ -102,7 +102,11 @@ class Home extends Component {
     onSaveRestaurant() {
         this.setState({
             placeName: this.state.placeName,
-            addPlaceModal: false
+            addPlaceModal: false,
+        }, () => {
+            this.setState({
+                placeName: ''
+            })
         });
 
         const { google } = this.props;
@@ -168,10 +172,7 @@ class Home extends Component {
 
             service.getDetails(request, (place, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    console.log("Selected Restaurant: ", this.state.selectedRestaurant);
-                    console.log("Place: ",place);
                     this.setState({reviews: place.reviews});
-                    console.log(this.state.reviews);
                 }
             });
 
