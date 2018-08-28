@@ -5,7 +5,7 @@ import ReactStars from "react-stars";
 import Modal from 'react-responsive-modal';
 
 const Reviews = ({ reviews }) => (
-    <div>{reviews && reviews.map((review, i) =>
+    <div>{reviews.map((review, i) =>
         <div key={i}>
             <div className="row">
                 <div className="col-12">
@@ -38,14 +38,17 @@ class Home extends Component {
             lng: '',
             places: [],
             unfilteredPlaces: [],
-            selectedRestaurant: "ChIJpaqqqm6qbUcRpqDvvWOJihk",
+            selectedRestaurant: "",
             map: {},
             reviews: [],
             modalOpen: false,
             minRating: '',
             maxRating: '',
             addPlaceModal: false,
-            placeName: ''
+            placeName: '',
+            setRating: null,
+            author: '',
+            reviewText: ''
         };
 
         this.filterPlaces = this.filterPlaces.bind(this);
@@ -53,6 +56,7 @@ class Home extends Component {
         this.onSaveRestaurant = this.onSaveRestaurant.bind(this);
         this.clearFilter = this.clearFilter.bind(this);
         this.getClickLocation = this.getClickLocation.bind(this);
+        this.leaveReview = this.leaveReview.bind(this);
     }
 
     handleChange(event) {
@@ -65,10 +69,11 @@ class Home extends Component {
         });
     }
 
-    ratingChanged = (newRating) => {
-        console.log(newRating)
+    ratingChanged = (setRating) => {
+        this.setState({
+            setRating: setRating
+        })
     };
-
 
     onMarkerClick = (props, marker) => {
         this.setState({
@@ -89,7 +94,8 @@ class Home extends Component {
         if (this.state.showingInfoWindow)
             this.setState({
                 activeMarker: null,
-                showingInfoWindow: false
+                showingInfoWindow: false,
+                reviews: []
             });
     };
 
@@ -140,34 +146,38 @@ class Home extends Component {
     onCloseModal = () => {
         this.setState({
             modalOpen: false,
-            addPlaceModal: false
+            addPlaceModal: false,
+            reviews: []
         });
     };
 
     onRestaurantClick(e) {
         this.setState({
             selectedRestaurant: e.currentTarget.dataset.id
-        });
+        }, () => {
 
-        const { google } = this.props;
+            const { google } = this.props;
 
-        let map = this.state.map;
+            let map = this.state.map;
 
-        let service = new google.maps.places.PlacesService(map);
+            let service = new google.maps.places.PlacesService(map);
 
-        const request = {
-            placeId: this.state.selectedRestaurant
-        };
+            const request = {
+                placeId: this.state.selectedRestaurant
+            };
 
-        service.getDetails(request, (place, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                this.setState({reviews: place.reviews});
-            }
-        });
+            service.getDetails(request, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    console.log("Selected Restaurant: ", this.state.selectedRestaurant);
+                    console.log("Place: ",place);
+                    this.setState({reviews: place.reviews});
+                    console.log(this.state.reviews);
+                }
+            });
 
-        this.setState({
-            modalOpen: true,
-            reviews: null
+            this.setState({
+                modalOpen: true,
+            });
         });
     };
 
@@ -221,7 +231,23 @@ class Home extends Component {
     }
 
     clearFilter() {
-        this.setState({ places: this.state.unfilteredPlaces });
+        this.setState({
+            places: this.state.unfilteredPlaces,
+            minRating: '',
+            maxRating: ''
+        });
+    }
+
+    leaveReview() {
+        this.setState({
+                reviews: [...this.state.reviews, {text: this.state.reviewText, author_name: this.state.author, rating: this.state.setRating}]
+            });
+
+        this.setState({
+            reviewText: '',
+            author: '',
+            setRating: null
+        })
     }
 
     render() {
@@ -277,7 +303,12 @@ class Home extends Component {
                                 </div>
                                 <div className="row mt-2">
                                     <div className="col-6">
-                                        <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
+                                        {
+                                            (!this.state.minRating || !this.state.maxRating) ?
+                                                <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control" disabled>Filter</button>
+                                                :
+                                                <button type="button" onClick={this.filterPlaces} className="btn btn-primary btn-block form-control">Filter</button>
+                                        }
                                     </div>
                                     <div className="col-6">
                                         <button type="button" onClick={this.clearFilter} className="btn btn-primary btn-block form-control">Clear</button>
@@ -321,9 +352,48 @@ class Home extends Component {
                             <h3>Reviews:</h3>
                         </div>
                     </div>
+
                     <div className="row">
                         <div className="col-12">
                             <Reviews reviews={this.state.reviews} />
+                        </div>
+                    </div>
+
+                    <div className="row">
+                        <div className="col-12">
+                            <div className="input-group mb-1">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text">Author</span>
+                                </div>
+                                <input type="text" aria-label="Author" className="form-control" placeholder="e.g. John Doe" name="author" value={this.state.author} onChange={this.handleChange}/>
+                            </div>
+
+                            <div className="input-group mb-1">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text">Rating</span>
+                                </div>
+                                <ReactStars
+                                    count={5}
+                                    value={this.state.setRating}
+                                    onChange={this.ratingChanged}
+                                    size={18}
+                                    color2={'#ffd700'}
+                                    className="form-control"
+                                />
+                            </div>
+
+                            <div className="input-group mb-1">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text">Review</span>
+                                </div>
+                                <input type="text" aria-label="Review" className="form-control" placeholder="e.g. A very nice place." name="reviewText" value={this.state.reviewText} onChange={this.handleChange} />
+                            </div>
+
+                            {
+                                (!this.state.author || !this.state.setRating || !this.state.reviewText) ?
+                                    <button className="btn-secondary btn-block form-control" disabled>Fill out the form to submit</button> :
+                                    <button onClick={this.leaveReview} className="btn-primary btn-block form-control">Submit a review</button>
+                            }
                         </div>
                     </div>
                 </Modal>

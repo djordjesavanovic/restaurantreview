@@ -39,3 +39,8 @@ html, body {
     cursor: pointer;
     background-color: #f8f7e7 !important;
 }
+
+.styles_modal__gNwvD {
+    max-height: 650px !important;
+    overflow-y: scroll !important;
+}
