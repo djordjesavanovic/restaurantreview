@@ -119,9 +119,14 @@ class Home extends Component {
                 map: map,
             });
 
-            marker.addListener('click', function() {
+            marker.addListener('click', () => {
                 infowindow.open(map, marker);
             });
+
+            map.addListener('click', () => {
+                infowindow.close(map, marker);
+            });
+
         };
 
         let targetURL = 'https://maps.googleapis.com/maps/api/streetview?size=200x200&location=' + this.state.newMarkerLoc.lat() + ',' + this.state.newMarkerLoc.lng() + '&fov=90&heading=235&pitch=10&key=AIzaSyAlA2_i0e46q-1FlJckttOZvuqwZkrXKHk';
