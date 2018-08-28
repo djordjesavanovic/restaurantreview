@@ -52,6 +52,7 @@ class Home extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.onSaveRestaurant = this.onSaveRestaurant.bind(this);
         this.clearFilter = this.clearFilter.bind(this);
+        this.getClickLocation = this.getClickLocation.bind(this);
     }
 
     handleChange(event) {
@@ -92,41 +93,48 @@ class Home extends Component {
             });
     };
 
-    getClickLocation() {
+    onSaveRestaurant() {
+        this.setState({
+            placeName: this.state.placeName,
+            addPlaceModal: false
+        });
 
         const { google } = this.props;
 
         let map = this.state.map;
 
-        this.setState({
-            addPlaceModal: true
-        });
-
-        map.addListener('click', function(e) {
-            placeMarker(e.latLng, map);
-        });
-
-        let infowindow = new google.maps.InfoWindow({
-            content: this.state.placeName
-        });
-
         const placeMarker = (position, map) => {
             let marker = new google.maps.Marker({
                 position: position,
-                map: map
+                map: map,
             });
 
             marker.addListener('click', function() {
                 infowindow.open(map, marker);
             });
-        }
+        };
+
+        let targetURL = 'https://maps.googleapis.com/maps/api/streetview?size=200x200&location=' + this.state.newMarkerLoc.lat() + ',' + this.state.newMarkerLoc.lng() + '&fov=90&heading=235&pitch=10&key=AIzaSyAlA2_i0e46q-1FlJckttOZvuqwZkrXKHk';
+
+        let contentString = `<p>${this.state.placeName}</p><IMG BORDER="0" ALIGN="Left" SRC="${targetURL}">`;
+
+        let infowindow = new google.maps.InfoWindow({
+            content: contentString
+        });
+
+        placeMarker(this.state.newMarkerLoc, map);
     }
 
-    onSaveRestaurant() {
-        this.setState({
-            placeName: this.state.placeName,
-            addPlaceModal: false
-        })
+    getClickLocation() {
+
+        let map = this.state.map;
+
+        map.addListener('dblclick', e => {
+            this.setState({
+                newMarkerLoc: e.latLng,
+                addPlaceModal: true
+            });
+        });
     }
 
     onCloseModal = () => {
@@ -278,55 +286,70 @@ class Home extends Component {
                             </div>
                             {this.state.places.map(((restaurant, i) => {
                                 return (
-                                    <Card key={i}>
-                                        <CardHeader>
-                                            <div>
-                                                <strong className="restaurantName" data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>{restaurant.name}</strong>
-                                            </div>
-                                        </CardHeader>
-                                        <CardBody>
-                                            <ReactStars
-                                                count={5}
-                                                value={!restaurant.rating ? 0 : restaurant.rating}
-                                                onChange={this.ratingChanged}
-                                                size={18}
-                                                color2={'#ffd700'}
-                                            />
-                                        </CardBody>
-                                        <CardFooter>
-                                            <div>
-                                                <small>{restaurant.vicinity}</small>
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
+                                    <div key={i} data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>
+                                        <Card>
+                                            <CardHeader>
+                                                <div>
+                                                    <strong className="restaurantName">{restaurant.name}</strong>
+                                                </div>
+                                            </CardHeader>
+                                            <CardBody>
+                                                <ReactStars
+                                                    count={5}
+                                                    value={!restaurant.rating ? 0 : restaurant.rating}
+                                                    onChange={this.ratingChanged}
+                                                    size={18}
+                                                    color2={'#ffd700'}
+                                                    edit={false}
+                                                />
+                                            </CardBody>
+                                            <CardFooter>
+                                                <div>
+                                                    <small>{restaurant.vicinity}</small>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    </div>
                                 )
                             }))}
                         </div>
                     </div>
                 </div>
                 <Modal open={this.state.modalOpen} onClose={this.onCloseModal} center>
-                    <h3>Reviews:</h3>
-                    <Reviews reviews={this.state.reviews} />
+                    <div className="row">
+                        <div className="col-12">
+                            <h3>Reviews:</h3>
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-12">
+                            <Reviews reviews={this.state.reviews} />
+                        </div>
+                    </div>
                 </Modal>
 
                 <Modal open={this.state.addPlaceModal} onClose={this.onCloseModal} center>
-                    <h3>Add a new place</h3>
 
-                    <div className="row">
-                        <div className="col-12">
-                            <strong>Place name:</strong>
+                    <div style={{padding: 20}}>
+                        <h3>Add a new place</h3>
+
+                        <div className="row">
+                            <div className="col-12">
+                                <strong>Place name:</strong>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-12">
+                                <input type="text" placeholder="e.g. Robby's Diner" className="form-control" name="placeName" value={this.state.placeName} onChange={this.handleChange} />
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col-12">
+                                <button type="button" onClick={this.onSaveRestaurant} className="btn btn-primary btn-block form-control">Add place</button>
+                            </div>
                         </div>
                     </div>
-                    <div className="row">
-                        <div className="col-12">
-                            <input type="text" placeholder="e.g. Robby's Diner" className="form-control" name="placeName" value={this.state.placeName} onChange={this.handleChange} />
-                        </div>
-                    </div>
-                    <div className="row">
-                        <div className="col-12">
-                            <button type="button" onClick={this.onSaveRestaurant} className="btn btn-primary btn-block form-control">Add place</button>
-                        </div>
-                    </div>
+
                 </Modal>
             </main>
         );

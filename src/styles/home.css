@@ -34,3 +34,8 @@ html, body {
 .card__footer {
     padding: 5px 10px !important;
 }
+
+.card:hover {
+    cursor: pointer;
+    background-color: #f8f7e7 !important;
+}
