@@ -3,6 +3,7 @@ import {Map, GoogleApiWrapper, Marker, InfoWindow} from 'google-maps-react';
 import { Card, CardHeader, CardBody, CardFooter } from "react-simple-card";
 import ReactStars from "react-stars";
 import Modal from 'react-responsive-modal';
+import randomString from 'random-string';
 
 const Reviews = ({ reviews }) => (
     <div>{reviews.map((review, i) =>
@@ -104,52 +105,50 @@ class Home extends Component {
             placeName: this.state.placeName,
             addPlaceModal: false,
         }, () => {
+
             this.setState({
-                placeName: ''
+                placeName: '',
+                places: [...this.state.places, {name: this.state.placeName, place_id: randomString(this.state.placeName), id: randomString(this.state.placeName), author_name: this.state.author, rating: null, vicinity: this.state.formatted_address, geometry: {location: this.state.newMarkerLoc}}]
             })
         });
 
-        const { google } = this.props;
-
-        let map = this.state.map;
-
-        const placeMarker = (position, map) => {
-            let marker = new google.maps.Marker({
-                position: position,
-                map: map,
-            });
-
-            marker.addListener('click', () => {
-                infowindow.open(map, marker);
-            });
-
-            map.addListener('click', () => {
-                infowindow.close(map, marker);
-            });
-
-        };
-
-        let targetURL = 'https://maps.googleapis.com/maps/api/streetview?size=200x200&location=' + this.state.newMarkerLoc.lat() + ',' + this.state.newMarkerLoc.lng() + '&fov=90&heading=235&pitch=10&key=AIzaSyAlA2_i0e46q-1FlJckttOZvuqwZkrXKHk';
-
-        let contentString = `<p>${this.state.placeName}</p><IMG BORDER="0" ALIGN="Left" SRC="${targetURL}">`;
-
-        let infowindow = new google.maps.InfoWindow({
-            content: contentString
-        });
-
-        placeMarker(this.state.newMarkerLoc, map);
     }
 
     getClickLocation() {
 
+        const { google } = this.props;
         let map = this.state.map;
+
+        let geocoder = new google.maps.Geocoder;
 
         map.addListener('dblclick', e => {
             this.setState({
                 newMarkerLoc: e.latLng,
+                newMarkerLocLat: e.latLng.lat(),
+                newMarkerLocLng: e.latLng.lng(),
                 addPlaceModal: true
+            }, () => {
+                geocodeLatLng(geocoder, map);
             });
         });
+
+        const geocodeLatLng = (geocoder, map) => {
+            let latlng = {lat: parseFloat(this.state.newMarkerLocLat), lng: parseFloat(this.state.newMarkerLocLng)};
+            geocoder.geocode({'location': latlng}, (results, status) => {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        this.setState({
+                            formatted_address: results[0].formatted_address
+                        })
+                    } else {
+                        window.alert('No results found');
+                    }
+                } else {
+                    window.alert('Geocoder failed due to: ' + status);
+                }
+            });
+        }
+
     }
 
     onCloseModal = () => {
@@ -217,6 +216,7 @@ class Home extends Component {
                         places: results,
                         unfilteredPlaces: results
                     });
+                console.log(this.state.places)
             });
 
         });
