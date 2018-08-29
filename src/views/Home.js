@@ -361,12 +361,15 @@ class Home extends Component {
 
                     <div className="row">
                         <div className="col-12">
-                            <Reviews reviews={this.state.reviews} />
+                            {!this.state.reviews ? <div className="mt-2 mb-2"><h4>There are currently no reviews for this place.</h4></div> :
+                                <Reviews reviews={this.state.reviews}/>
+                            }
                         </div>
                     </div>
 
                     <div className="row">
                         <div className="col-12">
+                            <h5>Leave a review</h5>
                             <div className="input-group mb-1">
                                 <div className="input-group-prepend">
                                     <span className="input-group-text">Author</span>
