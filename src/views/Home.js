@@ -5,6 +5,7 @@ import ReactStars from "react-stars";
 import Modal from 'react-responsive-modal';
 import randomString from 'random-string';
 
+// Reviews component
 const Reviews = ({ reviews }) => (
     <div>{reviews.map((review, i) =>
         <div key={i}>
@@ -60,6 +61,7 @@ class Home extends Component {
         this.leaveReview = this.leaveReview.bind(this);
     }
 
+    // Handles input changes for values stored in state
     handleChange(event) {
         const target = event.target;
         const value = target.value;
@@ -70,12 +72,14 @@ class Home extends Component {
         });
     }
 
+    // Handles changes for the rating component
     ratingChanged = (setRating) => {
         this.setState({
             setRating: setRating
         })
     };
 
+    // Integrated handler for recognizing the selected marker and opening its InfoWindow (google-maps-react)
     onMarkerClick = (props, marker) => {
         this.setState({
             activeMarker: marker,
@@ -84,14 +88,15 @@ class Home extends Component {
         });
     };
 
+    // Integrated handler for closing an InfoWindow and removing the active Marker from state, when a user clicks on the X (google-maps-react)
     onInfoWindowClose = () =>
         this.setState({
             activeMarker: null,
             showingInfoWindow: false
         });
 
+    // Integrated handler for closing an InfoWindow and removing the active Marker from state, when a user clicks on the map (google-maps-react)
     onMapClicked = () => {
-
         if (this.state.showingInfoWindow)
             this.setState({
                 activeMarker: null,
@@ -100,12 +105,12 @@ class Home extends Component {
             });
     };
 
+    // Method for gathering the newly added restaurant's name and adding it to the places array in the state - also closes the modal window
     onSaveRestaurant() {
         this.setState({
             placeName: this.state.placeName,
             addPlaceModal: false,
         }, () => {
-
             this.setState({
                 placeName: '',
                 places: [...this.state.places, {name: this.state.placeName, place_id: randomString(this.state.placeName), id: randomString(this.state.placeName), author_name: this.state.author, rating: null, vicinity: this.state.formatted_address, geometry: {location: this.state.newMarkerLoc}}]
@@ -114,13 +119,15 @@ class Home extends Component {
 
     }
 
+    /* Method which gathers the location (latLng) from a double click on the map,
+    converts it into a formatted address and opens up the modal window for adding a new restaurant */
     getClickLocation() {
-
         const { google } = this.props;
         let map = this.state.map;
+        let geocoder = new google.maps.Geocoder();
 
-        let geocoder = new google.maps.Geocoder;
 
+        // Listener, which gathers the latitude & longitude on the selected place - double click
         map.addListener('dblclick', e => {
             this.setState({
                 newMarkerLoc: e.latLng,
@@ -132,6 +139,8 @@ class Home extends Component {
             });
         });
 
+
+        // Reverse geocoding to get the physical address, base on the previously collected latitude & longitude
         const geocodeLatLng = (geocoder, map) => {
             let latlng = {lat: parseFloat(this.state.newMarkerLocLat), lng: parseFloat(this.state.newMarkerLocLng)};
             geocoder.geocode({'location': latlng}, (results, status) => {
@@ -151,23 +160,23 @@ class Home extends Component {
 
     }
 
+    // Simply closes the modal window
     onCloseModal = () => {
         this.setState({
             modalOpen: false,
             addPlaceModal: false,
-            reviews: []
         });
     };
 
+    /* Picks up the ID of a selected restaurant in the side menu and requests its details from the Places API.
+    Then it populates the reviews array in the state and opens up the modal window, displaying said reviews */
     onRestaurantClick(e) {
         this.setState({
             selectedRestaurant: e.currentTarget.dataset.id
         }, () => {
 
             const { google } = this.props;
-
             let map = this.state.map;
-
             let service = new google.maps.places.PlacesService(map);
 
             const request = {
@@ -186,15 +195,18 @@ class Home extends Component {
         });
     };
 
+    // Integrated method, which calls the searchNearby method and adds the map infos to the state (google-maps-react)
     onMapReady = (mapProps, map) => {
         this.searchNearby(map);
         this.setState({map: map});
     };
 
+    // Integrated method, which finds user's location and based on it, it finds the nearest restaurants
     searchNearby = (map) => {
 
         const { google } = this.props;
 
+        // Finds user's location
         navigator.geolocation.getCurrentPosition((position) => {
             let initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             map.setCenter(initialLocation);
@@ -210,21 +222,21 @@ class Home extends Component {
                 type: ['restaurant'],
             };
 
+            // Finds nearest restaurant
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK)
                     this.setState({
                         places: results,
                         unfilteredPlaces: results
                     });
-                console.log(this.state.places)
             });
 
         });
 
     };
 
+    // Method, which filters the gathered restaurants, based on the lowest and highest rating
     filterPlaces() {
-
         const restaurants = this.state.places;
 
         const filteredRestaurant = restaurants.filter(restaurant => {
@@ -236,6 +248,7 @@ class Home extends Component {
         this.setState({ places: filteredRestaurant });
     }
 
+    // Method, which clears the filters and returns the original, unfiltered restaurants
     clearFilter() {
         this.setState({
             places: this.state.unfilteredPlaces,
@@ -244,6 +257,7 @@ class Home extends Component {
         });
     }
 
+    // Method which adds the pre-entered review into the reviews array in the state
     leaveReview() {
         this.setState({
                 reviews: [...this.state.reviews, {text: this.state.reviewText, author_name: this.state.author, rating: this.state.setRating}]
@@ -258,6 +272,7 @@ class Home extends Component {
 
     render() {
 
+        // Custom icon for user's location
         const icon = {
             url: "https://image.flaticon.com/icons/svg/149/149060.svg",
             scaledSize: new this.props.google.maps.Size(90, 42),
@@ -267,6 +282,8 @@ class Home extends Component {
             <main role="main">
                 <div className="container-fluid">
                     <div className="row">
+
+                        {/* Map area */}
                         <div className="col-8" id="map">
                             <Map
                                 className="map"
@@ -275,15 +292,20 @@ class Home extends Component {
                                 onReady={this.onMapReady}
                                 zoom={16}
                             >
+
+                                {/* User's location */}
                                 <Marker
                                     icon={icon}
                                     position={this.state.initialLocation}
                                 />
 
+
+                                {/* Mapping out markers on the map */}
                                 {this.state.places.map(((place) => {
                                     return <Marker onClick={this.onMarkerClick} name={place.name} id={place.id} key={place.id} position={{lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}} />
                                 }))}
 
+                                {/* InfoWindow component, which shows up, based on the selected marker */}
                                 <InfoWindow
                                     marker={this.state.activeMarker}
                                     onClose={this.onInfoWindowClose}
@@ -301,6 +323,8 @@ class Home extends Component {
                                 </InfoWindow>
                             </Map>
                         </div>
+
+                        {/* Side menu */}
                         <div className="col-4" id="sidebar">
                             <div className="mb-3">
                                 <div className="input-group">
@@ -321,6 +345,9 @@ class Home extends Component {
                                     </div>
                                 </div>
                             </div>
+
+
+                            {/* Mapping out the restaurants in the side menu */}
                             {this.state.places.map(((restaurant, i) => {
                                 return (
                                     <div key={i} data-id={restaurant.place_id} onClick={this.onRestaurantClick.bind(this)}>
@@ -352,6 +379,10 @@ class Home extends Component {
                         </div>
                     </div>
                 </div>
+
+                {/* Modals */}
+
+                {/* Reviews modal window */}
                 <Modal open={this.state.modalOpen} onClose={this.onCloseModal} center>
                     <div className="row">
                         <div className="col-12">
@@ -367,6 +398,7 @@ class Home extends Component {
                         </div>
                     </div>
 
+                    {/* Leave a review */}
                     <div className="row">
                         <div className="col-12">
                             <h5>Leave a review</h5>
@@ -407,11 +439,10 @@ class Home extends Component {
                     </div>
                 </Modal>
 
+                {/* Add a new place modal window */}
                 <Modal open={this.state.addPlaceModal} onClose={this.onCloseModal} center>
-
                     <div style={{padding: 20}}>
                         <h3>Add a new place</h3>
-
                         <div className="row">
                             <div className="col-12">
                                 <strong>Place name:</strong>
@@ -428,8 +459,8 @@ class Home extends Component {
                             </div>
                         </div>
                     </div>
-
                 </Modal>
+
             </main>
         );
     }
