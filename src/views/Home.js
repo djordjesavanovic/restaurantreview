@@ -187,6 +187,7 @@ class Home extends Component {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     this.setState({reviews: place.reviews});
                 }
+                console.log(this.state.reviews);
             });
 
             this.setState({
@@ -260,7 +261,7 @@ class Home extends Component {
     // Method which adds the pre-entered review into the reviews array in the state
     leaveReview() {
         this.setState({
-                reviews: [...this.state.reviews, {text: this.state.reviewText, author_name: this.state.author, rating: this.state.setRating}]
+                reviews: [...this.state.reviews || [], {text: this.state.reviewText, author_name: this.state.author, rating: this.state.setRating}]
             });
 
         this.setState({
